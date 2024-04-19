@@ -8,10 +8,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      keyframes: {
+        gemini: {
+          "0%": { opacity: "0", transform: "translate3d(0, 40px, 0)" },
+          "20%": { opacity: "0" },
+          "100%": { opacity: "1", transform: "translate3d(0, 0, 0)" },
+        },
+      },
+      animation: {
+        gemini: "gemini .7s cubic-bezier(0.19, 1, 0.22, 1) forwards",
       },
     },
   },
