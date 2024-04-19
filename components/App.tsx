@@ -59,7 +59,24 @@ function resizeSize(
   }
 }
 
-function resizeSizePosition() {}
+function resizeSizePosition(
+  size: MotionValue<number>,
+  minSize: number,
+  delta: number,
+  coordinate: MotionValue<number>,
+  newCoordinate: number
+) {
+  const sizeValue = size.get();
+  const coordinateValue = coordinate.get();
+  if (
+    sizeValue - delta > minSize &&
+    ((delta < 0 && newCoordinate <= coordinateValue) ||
+      (delta > 0 && newCoordinate >= coordinateValue))
+  ) {
+    size.set(sizeValue - delta);
+    coordinate.set(coordinateValue + delta);
+  }
+}
 
 export default function App({
   name,
@@ -110,49 +127,29 @@ export default function App({
     });
   }
 
-  function resizeLeft(info: PanInfo) {
-    if (
-      width.get() - info.delta.x > minWidth &&
-      ((info.delta.x < 0 && info.point.x <= x.get()) ||
-        (info.delta.x > 0 && info.point.x >= x.get()))
-    ) {
-      width.set(width.get() - info.delta.x);
-      x.set(x.get() + info.delta.x);
-    }
-  }
+  const resizeLeft = useCallback(
+    (info: PanInfo) =>
+      resizeSizePosition(width, minWidth, info.delta.x, x, info.point.x),
+    [width, x]
+  );
 
-  function resizeRight(info: PanInfo) {
-    // if (
-    //   width.get() + info.delta.x > minWidth &&
-    //   ((info.delta.x < 0 && info.point.x <= x.get() + width.get()) ||
-    //     (info.delta.x > 0 && info.point.x >= x.get() + width.get()))
-    // ) {
-    //   width.set(width.get() + info.delta.x);
-    // }
-    resizeSize(width, minWidth, info.delta.x, x.get(), info.point.x);
-  }
+  const resizeRight = useCallback(
+    (info: PanInfo) =>
+      resizeSize(width, minWidth, info.delta.x, x.get(), info.point.x),
+    [width, x]
+  );
 
-  function resizeTop(info: PanInfo) {
-    if (
-      height.get() - info.delta.y > minHeight &&
-      ((info.delta.y < 0 && info.point.y <= y.get()) ||
-        (info.delta.y > 0 && info.point.y >= y.get()))
-    ) {
-      height.set(height.get() - info.delta.y);
-      y.set(y.get() + info.delta.y);
-    }
-  }
+  const resizeTop = useCallback(
+    (info: PanInfo) =>
+      resizeSizePosition(height, minHeight, info.delta.y, y, info.point.y),
+    [height, y]
+  );
 
-  function resizeBottom(info: PanInfo) {
-    // if (
-    //   height.get() + info.delta.y > minHeight &&
-    //   ((info.delta.y < 0 && info.point.y <= y.get() + height.get()) ||
-    //     (info.delta.y > 0 && info.point.y >= y.get() + height.get()))
-    // ) {
-    //   height.set(height.get() + info.delta.y);
-    // }
-    resizeSize(height, minHeight, info.delta.y, y.get(), info.point.y);
-  }
+  const resizeBottom = useCallback(
+    (info: PanInfo) =>
+      resizeSize(height, minHeight, info.delta.y, y.get(), info.point.y),
+    [height, y]
+  );
 
   return (
     <AnimatePresence>
