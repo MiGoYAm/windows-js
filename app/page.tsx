@@ -1,14 +1,18 @@
-import App from "@/components/App";
+"use client";
+
+import Dock, { windowsAtom } from "@/components/Dock";
+import { atom, useAtomValue } from "jotai";
+import React from "react";
 
 export default function Home() {
+  const windows = useAtomValue(windowsAtom);
+
   return (
-    <main className="h-screen max-w-screen overflow-clip">
-      <App name="teset">
-        <div className="size-64"></div>
-      </App>
-      <App name="Notepad">
-        <textarea className="size-full resize-none outline-none border-0 font-mono"></textarea>
-      </App>
+    <main className="relative h-screen w-screen overflow-clip dark:bg-black">
+      {windows.map((window, index) =>
+        React.createElement(window, { key: window.name + index }),
+      )}
+      <Dock />
     </main>
   );
 }
