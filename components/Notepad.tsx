@@ -1,15 +1,16 @@
 "use client";
 
-import App from "@/components/App";
+import App, { AppProps, AppWindow } from "@/components/App";
 import { Save } from "lucide-react";
 import { useRef } from "react";
 
-export default function Notepad() {
+export default function Notepad(props: AppProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   return (
     <App
       name="Notepad"
+      {...props}
       headerLeft={
         <button
           onClick={() => {
@@ -36,3 +37,5 @@ export default function Notepad() {
     </App>
   );
 }
+
+Notepad.appName = "Notepad";

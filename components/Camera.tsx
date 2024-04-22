@@ -1,9 +1,9 @@
 "use client";
 
-import App from "@/components/App";
+import App, { AppProps } from "@/components/App";
 import { useEffect, useRef, useState } from "react";
 
-export default function Camera() {
+export default function Camera(props: AppProps) {
   const [error, setError] = useState(null);
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -26,15 +26,15 @@ export default function Camera() {
   }, []);
 
   return (
-    <App name="Camera">
-      <div className="flex flex-1 max-h-full justify-center items-center">
+    <App name="Camera" {...props}>
+      <div className="flex max-h-full flex-1 items-center justify-center">
         {error ? (
-          <p className="text-white text-center">
+          <p className="text-center text-white">
             Wystąpił błąd w trakcie inicjalizacji kamery
           </p>
         ) : (
           <video
-            className="object-contain h-full w-full"
+            className="h-full w-full object-contain"
             autoPlay
             playsInline
             disablePictureInPicture
@@ -45,3 +45,5 @@ export default function Camera() {
     </App>
   );
 }
+
+Camera.appName = "Camera"

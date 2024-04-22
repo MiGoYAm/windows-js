@@ -1,18 +1,47 @@
 "use client";
 
-import Dock, { windowsAtom } from "@/components/Dock";
-import { atom, useAtomValue } from "jotai";
+import { AppWindow, windowAtomsAtom } from "@/components/App";
+import Dock from "@/components/Dock";
+import { AnimatePresence } from "framer-motion";
+import { PrimitiveAtom, useAtom, useAtomValue } from "jotai";
 import React from "react";
 
 export default function Home() {
-  const windows = useAtomValue(windowsAtom);
-
   return (
     <main className="relative h-screen w-screen overflow-clip dark:bg-black">
-      {windows.map((window, index) =>
-        React.createElement(window, { key: window.name + index }),
-      )}
+      <Desktop />
       <Dock />
     </main>
   );
+}
+
+function Desktop() {
+  const [windows, dispatch] = useAtom(windowAtomsAtom);
+
+  return (
+    <AnimatePresence>
+      {windows.map((windowAtom) => (
+        <WindowWrapper
+          stateAtom={windowAtom}
+          close={() => dispatch({ type: "remove", atom: windowAtom })}
+          key={`${windowAtom}`}
+        />
+      ))}
+    </AnimatePresence>
+  );
+}
+
+function WindowWrapper({
+  stateAtom,
+  close,
+}: {
+  stateAtom: PrimitiveAtom<AppWindow>;
+  close: () => void;
+}) {
+  const state = useAtomValue(stateAtom);
+
+  return React.createElement(state.app, {
+    state: stateAtom,
+    close: close,
+  });
 }
