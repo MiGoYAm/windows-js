@@ -1,6 +1,6 @@
 "use client";
 
-import App, { AppProps, AppWindow } from "@/components/App";
+import App, { AppProps } from "@/components/App";
 import { Save } from "lucide-react";
 import { useRef } from "react";
 
@@ -32,7 +32,7 @@ export default function Notepad(props: AppProps) {
     >
       <textarea
         ref={ref}
-        className="size-full resize-none border-0 font-mono outline-none"
+        className="flex-1 resize-none border-0 font-mono outline-none"
       />
     </App>
   );

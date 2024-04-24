@@ -1,7 +1,7 @@
 "use client";
 
 import { atom, useAtom, useSetAtom } from "jotai";
-import { AppWindow, Visibility, openAppAtom, windowsAtom } from "./App";
+import { AppWindow, openAppAtom, windowAtomsAtom } from "./App";
 import {
   AnimatePresence,
   MotionValue,
@@ -11,35 +11,36 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import React, { RefObject, useMemo, useRef } from "react";
-import Notepad from "./Notepad";
-import Camera from "./Camera";
+import React, { MutableRefObject, RefObject, useCallback, useRef } from "react";
+import Notepad from "./apps/Notepad";
+import Camera from "./apps/Camera";
+import Krunker from "./apps/Krunker";
+import { useSelectAtom } from "./hooks";
+import { PrimitiveAtom } from "jotai/experimental";
 
-const visibilityWindowAtom = atom(null, (get, set, app: AppWindow["app"], visibility: Visibility ) => {
-  const windows = [...get(windowsAtom)];
-  const index = windows.findIndex((w) => w.app === app)
-  windows[index] = { app, visibility }
-  set(windowsAtom, windows)
+const toggleVisibilityAtom = atom(
+  null,
+  (get, set, atom: PrimitiveAtom<AppWindow>) => {
+    set(atom, (prev) => ({
+      ...prev,
+      visibility: prev.visibility === "floating" ? "minimized" : "floating",
+    }));
+  },
+);
+
+const pinnedAppsAtom = atom<AppWindow["app"][]>([Notepad, Camera, Krunker]);
+
+const groupedAppsAtom = atom((get) => {
+  const windowAtoms = get(windowAtomsAtom);
+  return Object.groupBy(windowAtoms, (w) => get(w).app.appName);
 });
-
-const maxWindow = atom(null, (get, set, app: AppWindow["app"]) => {
-  const windows = [...get(windowsAtom)];
-  const index = windows.findIndex((w) => w.app === app)
-  windows[index] = { app, visibility: "minimized"}
-  set(windowsAtom, windows)
-});
-
-const openedAppSetAtom = atom((get) => {
-  return new Set(get(windowsAtom))
-})
-const pinnedAppsAtom = atom<AppWindow["app"][]>([Notepad, Camera]);
 
 export default function Dock() {
   const [pinnedApps, setPinnedApps] = useAtom(pinnedAppsAtom);
   //const [apps, setApps] = useAtom(opendedAppsAtom);
 
   const dragContraints = useRef(null);
-
+  const blockAnimation = useRef(false);
   const mouseX = useMotionValue<number>(Infinity);
 
   return (
@@ -47,12 +48,19 @@ export default function Dock() {
       ref={dragContraints}
       layout
       className="fixed bottom-0 left-0 right-0 mx-auto flex h-20 w-fit rounded-2xl bg-white/20 p-2"
-      onMouseMove={(e) => mouseX.set(e.clientX)}
-      onMouseLeave={() => mouseX.set(Infinity)}
+      onMouseMove={(e) => {
+        if (blockAnimation.current) return;
+        mouseX.set(e.clientX);
+      }}
+      onMouseLeave={() => {
+        if (blockAnimation.current) return;
+        mouseX.set(Infinity);
+      }}
     >
       <AppList
         apps={pinnedApps}
         setApps={setPinnedApps}
+        blockAnimation={blockAnimation}
         mouseX={mouseX}
         dragContraints={dragContraints}
       />
@@ -74,6 +82,7 @@ export default function Dock() {
 function AppList(props: {
   apps: AppWindow["app"][];
   setApps: (apps: AppWindow["app"][]) => void;
+  blockAnimation: MutableRefObject<boolean>;
   mouseX: MotionValue<number>;
   dragContraints: RefObject<Element>;
 }) {
@@ -89,6 +98,7 @@ function AppList(props: {
           <AppIcon
             app={app}
             key={app.name}
+            blockAnimation={props.blockAnimation}
             mouseX={props.mouseX}
             dragContraints={props.dragContraints}
           />
@@ -100,17 +110,22 @@ function AppList(props: {
 
 function AppIcon(props: {
   app: AppWindow["app"];
+  blockAnimation: MutableRefObject<boolean>;
   mouseX: MotionValue<number>;
   dragContraints: RefObject<Element>;
 }) {
-  const ref = useRef<HTMLLinkElement>(null);
+  const ref = useRef<HTMLLIElement>(null);
 
-  const [windows] = useAtom(windowsAtom);
   const openApp = useSetAtom(openAppAtom);
-  const setWindowVisibility = useSetAtom(visibilityWindowAtom)
-  const openedWindows = useMemo(
-    () => windows.filter((window) => window.app === props.app),
-    [windows, props.app],
+  const toggleWindowVisibility = useSetAtom(toggleVisibilityAtom);
+
+  const openedWindows = useSelectAtom(
+    groupedAppsAtom,
+    useCallback(
+      (apps) => apps[props.app.appName] ?? [],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [],
+    ),
   );
 
   const distance = useTransform(props.mouseX, (x) => {
@@ -135,21 +150,17 @@ function AppIcon(props: {
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5 }}
-      onTap={() => {
+      onClick={() => {
         if (openedWindows.length === 0) {
           openApp(props.app);
         } else if (openedWindows.length === 1) {
-          const visibility = openedWindows[0].visibility
-          if (visibility === "minimized") {
-            setWindowVisibility(props.app, "floating")
-          } else {
-            setWindowVisibility(props.app, "minimized")
-          }
-
+          toggleWindowVisibility(openedWindows[0]);
         }
       }}
       onContextMenu={(e) => {
         e.preventDefault();
+        openApp(props.app);
+        props.blockAnimation.current = true;
       }}
       dragConstraints={props.dragContraints}
       className="relative flex size-16 items-center justify-center bg-white text-sm"

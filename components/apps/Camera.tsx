@@ -25,9 +25,13 @@ export default function Camera(props: AppProps) {
     };
   }, []);
 
+  useEffect(() => {
+    console.log("camera rerender");
+  });
+
   return (
     <App name="Camera" {...props}>
-      <div className="flex max-h-full flex-1 items-center justify-center">
+      <div className="flex-1 items-center justify-center">
         {error ? (
           <p className="text-center text-white">
             Wystąpił błąd w trakcie inicjalizacji kamery
@@ -46,4 +50,4 @@ export default function Camera(props: AppProps) {
   );
 }
 
-Camera.appName = "Camera"
+Camera.appName = "Camera";
