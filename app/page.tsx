@@ -1,11 +1,12 @@
 "use client";
 
-import { AppWindow, windowAtomsAtom } from "@/components/App";
+import { windowAtomsAtom } from "@/components/App";
 import Dock from "@/components/Dock";
-import { useWindowSize } from "@/components/hooks";
+import { useWindowSize } from "@/lib/hooks";
 import { AnimatePresence } from "framer-motion";
-import { PrimitiveAtom, useAtomValue } from "jotai";
-import React, { useEffect } from "react";
+import { useAtomValue } from "jotai";
+import React from "react";
+import Window from "@/components/App"
 
 export default function Home() {
   useWindowSize();
@@ -24,17 +25,10 @@ function Desktop() {
   return (
     <AnimatePresence>
       {windowAtoms.map((windowAtom) => (
-        <WindowWrapper state={windowAtom} key={`${windowAtom}`} />
+        <WindowMemo state={windowAtom} key={`${windowAtom}`} />
       ))}
     </AnimatePresence>
   );
 }
 
-const WindowWrapper = React.memo(function WindowWrapper(props: {
-  state: PrimitiveAtom<AppWindow>;
-}) {
-  const state = useAtomValue(props.state);
-  useEffect(() => console.log("window create"));
-
-  return React.createElement(state.app, props);
-});
+const WindowMemo = React.memo(Window);
