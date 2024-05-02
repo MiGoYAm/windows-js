@@ -2,12 +2,6 @@
 
 import { atom, useAtom, useSetAtom } from "jotai";
 import {
-  openAppAtom,
-  windowAtomsAtom,
-  selectWindowAtom,
-  zIndexAtom,
-} from "./App";
-import {
   AnimatePresence,
   MotionValue,
   Reorder,
@@ -23,6 +17,8 @@ import Krunker from "./apps/Krunker";
 import { useSelectAtom } from "../lib/hooks";
 import { PrimitiveAtom } from "jotai/experimental";
 import { AppComponent, AppWindow } from "@/lib/types";
+import { openAppAtom, selectWindowAtom, windowAtomsAtom, zIndexAtom } from "@/lib/atoms";
+import Settings from "./apps/Settings";
 
 const toggleVisibilityAtom = atom(
   null,
@@ -43,7 +39,7 @@ const toggleVisibilityAtom = atom(
   },
 );
 
-const pinnedAppsAtom = atom<AppComponent[]>([Notepad, Camera, Krunker]);
+const pinnedAppsAtom = atom<AppComponent[]>([Notepad, Camera, Krunker, Settings]);
 
 const groupedAppsAtom = atom((get) => {
   const windowAtoms = get(windowAtomsAtom);

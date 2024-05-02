@@ -6,153 +6,70 @@ import {
   MotionValue,
   PanInfo,
   motion,
-  useAnimate,
   useAnimationControls,
   useDragControls,
   useMotionValue,
-  useMotionValueEvent,
 } from "framer-motion";
-import { PrimitiveAtom, atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import {
-  atomFamily,
-  atomWithDefault,
-  splitAtom,
-  useAtomCallback,
-} from "jotai/utils";
-import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { PrimitiveAtom, atom, useAtomValue, useSetAtom } from "jotai";
+import { useAtomCallback } from "jotai/utils";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   browserWindowAtom,
-  useIsFirstRender,
   useNotReactiveAtom,
   useWindowListener,
 } from "../lib/hooks";
-import { type App, AppWindow, WindowProps, AppComponent } from "@/lib/types";
-import Paint from "./apps/Paint";
-
-const appAtomFamily = atomFamily((name: string) => {
-  return atomWithDefault<App>((get) => {
-    const size = 512;
-    const browserWindow = get(browserWindowAtom);
-
-    const width = Math.min(size, browserWindow?.width ?? size);
-    const height = Math.min(size, browserWindow?.height ?? size);
-
-    let lastPosition;
-
-    if (browserWindow) {
-      lastPosition = {
-        x: (browserWindow.width - width) / 2,
-        y: (browserWindow.height - height) / 2,
-      };
-    } else {
-      lastPosition = {
-        x: 0,
-        y: 0,
-      };
-    }
-
-    return {
-      maximized: false,
-      lastPosition,
-      lastSize: { width, height },
-    };
-  });
-});
-
-export const windowsAtom = atom<AppWindow[]>([
-  // {
-  //   app: Paint,
-  //   maximized: false,
-  //   minimized: false,
-  //   zIndex: 10,
-  // },
-]);
-
-export const windowAtomsAtom = splitAtom(windowsAtom);
-
-export const openAppAtom = atom(null, (get, set, app: AppComponent) => {
-  const appState = get(appAtomFamily(app.appName));
-  const zIndex = get(zIndexAtom) + 1;
-  set(zIndexAtom, zIndex);
-
-  set(windowsAtom, (prev) => [
-    ...prev,
-    {
-      app,
-      maximized: appState.maximized,
-      zIndex,
-      minimized: false,
-    },
-  ]);
-});
-
-export const closeWindowAtom = atom(
-  null,
-  (_get, set, atom: PrimitiveAtom<AppWindow>) => {
-    set(windowAtomsAtom, { type: "remove", atom });
-  },
-);
-
-export const maximizeWindowAtom = atom(
-  null,
-  (get, set, atom: PrimitiveAtom<AppWindow>) => {
-    const window = get(atom);
-    set(atom, { ...window, maximized: !window.maximized });
-    set(appAtomFamily(window.app.appName), (prev) => ({
-      ...prev,
-      maximized: !window.maximized,
-    }));
-  },
-);
-
-export const selectWindowAtom = atom(
-  null,
-  (get, set, atom: PrimitiveAtom<AppWindow>) => {
-    const window = get(atom);
-    let zIndex = get(zIndexAtom);
-
-    if (zIndex !== window.zIndex) {
-      zIndex += 1;
-      set(zIndexAtom, zIndex);
-      set(atom, { ...window, zIndex });
-    }
-  },
-);
-
-export const zIndexAtom = atom(10);
+import { AppWindow, WindowProps } from "@/lib/types";
+import {
+  appAtomFamily,
+  closeWindowAtom,
+  maximizeWindowAtom,
+  selectWindowAtom,
+  windowsAtom,
+  zIndexAtom,
+} from "@/lib/atoms";
 
 type VariantProps = {
   width: number;
   height: number;
   x: number;
   y: number;
-  isFirstRender: boolean;
   browser: { width: number; height: number } | null;
 };
 
 const variants = {
-  floating: (props: VariantProps) => ({
-    width: props.isFirstRender ? props.width : [props.browser?.width ?? props.width, props.width],
-    height: props.isFirstRender ? props.height : [props.browser?.height ?? props.height, props.height],
-    x: props.x,
-    y: props.y,
-  }),
-  minimized: {
-    scale: 0.7,
-    opacity: 0,
-    originY: 1,
-    transitionEnd: { display: "none" },
-  },
-  notMinimized: {
-    opacity: 1,
-    scale: 1,
-    display: "",
-  },
   close: {
     scale: 0.8,
     opacity: 0,
     originY: 0.5,
   },
+  minimized: {
+    scale: 0.7,
+    opacity: 0,
+    originY: 1,
+    transitionEnd: {
+      display: "none",
+    },
+  },
+  notMinimized: {
+    scale: 1,
+    opacity: 1,
+    originY: 1,
+    display: "",
+  },
+  floating: (props: VariantProps) => ({
+    width: [props.browser?.width ?? props.width, props.width],
+    height: [props.browser?.height ?? props.height, props.height],
+    x: props.x,
+    y: props.y,
+  }),
   maximized: (props: VariantProps) => ({
     x: 0,
     y: 0,
@@ -212,8 +129,6 @@ export default function Window({ state }: WindowProps) {
     useCallback((get) => get(browserWindowAtom), []),
   );
 
-  const isFirstRender = useIsFirstRender();
-
   const prevState = useRef({
     width: width.get(),
     height: height.get(),
@@ -221,32 +136,42 @@ export default function Window({ state }: WindowProps) {
     y: y.get(),
   });
 
-  const dragControls = useDragControls();
-
+  const [prevWindow] = useState(state);
   useEffect(() => {
-    console.log("app rerender", state.toString());
+    console.log("app rerender", state.toString(), prevWindow.toString());
+    console.log(prevState.current);
   });
 
-  // useMotionValueEvent(x, "animationComplete", () => {
-  //   console.log("x animation complete", x.get());
-  // });
-  // useMotionValueEvent(x, "change", (latest) => {
-  //   console.log("x change", latest);
-  // });
-  // useMotionValueEvent(width, "animationComplete", () => {
-  //   console.log("width animation complete", width.get());
-  // });
-  // useMotionValueEvent(width, "change", (latest) => {
-  //   console.log("width change", latest);
-  // });
+  const animationControls = useAnimationControls();
+  const dragControls = useDragControls();
+  const isFirstRender = useRef(true);
+
+  useLayoutEffect(() => {
+    if (window.maximized) {
+      animationControls.start("maximized");
+    } else if (!isFirstRender.current) {
+      animationControls.start("floating");
+    }
+
+    return () => animationControls.stop();
+  }, [window.maximized]);
+
+  useLayoutEffect(() => {
+    animationControls.start(window.minimized ? "minimized" : "notMinimized");
+
+    return () => animationControls.stop();
+  }, [window.minimized]);
+
+  useEffect(() => {
+    isFirstRender.current = false;
+    return () => {
+      isFirstRender.current = true;
+    };
+  }, []);
 
   const setOnTop = () => windowOnTop(state);
 
   const save = useCallback(() => {
-    if (typeof width.get() === "string" || typeof height.get() === "string") {
-      return;
-    }
-
     prevState.current = {
       width: width.get(),
       height: height.get(),
@@ -256,23 +181,26 @@ export default function Window({ state }: WindowProps) {
 
     setAppState((prev) => ({
       ...prev,
-      lastSize: { width: width.get(), height: height.get() },
-      lastPosition: { x: x.get(), y: y.get() },
+      lastSize: {
+        width: prevState.current.width,
+        height: prevState.current.height,
+      },
+      lastPosition: { x: prevState.current.x, y: prevState.current.y },
     }));
   }, []);
 
   return (
     <motion.div
-      layout
+      layout="size"
       variants={variants}
-      custom={{ ...prevState.current, isFirstRender, browser: readBrowserWindow() }}
+      custom={{
+        ...prevState.current,
+        browser: readBrowserWindow(),
+      }}
       transition={{ type: "tween", duration: 0.2 }}
-      initial={false}
+      initial="close"
       style={{ zIndex: window.zIndex, x, y, width, height }}
-      animate={[
-        window.maximized ? "maximized" : "floating",
-        window.minimized ? "minimized" : "notMinimized",
-      ]}
+      animate={animationControls}
       exit="close"
       drag={!window.maximized}
       dragConstraints={{ top: 0 }}
@@ -282,8 +210,8 @@ export default function Window({ state }: WindowProps) {
       dragElastic={0}
       onDragEnd={save}
       onTapStart={setOnTop}
-      // _dragX={x}
-      // _dragY={y}
+      _dragX={x}
+      _dragY={y}
       className="absolute flex select-none flex-col overflow-clip rounded-xl border border-zinc-600 bg-neutral-800 shadow-2xl"
     >
       {!window.app.customTitleBar && (
@@ -343,7 +271,9 @@ export const TitleBar = memo(function TitleBar(props: {
           />
         </div>
       </div>
-      <h3 className="text-lg text-white">{props.title}</h3>
+      <h3 className="text font-medium text-white">
+        {props.title} {props.state.toString()}
+      </h3>
       <div className="flex-1">
         <div className="m-1 flex items-center justify-end">
           {props.children}

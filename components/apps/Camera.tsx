@@ -45,4 +45,4 @@ export default function Camera() {
 }
 
 Camera.appName = "Camera";
-Camera.icon = <CameraIcon className="size-3/5" />;
+Camera.icon = <CameraIcon className="size-4/5" />;
