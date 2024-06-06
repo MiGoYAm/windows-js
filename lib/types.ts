@@ -15,6 +15,8 @@ export type AppComponent = React.FC<AppProps> & {
   appName: string;
   icon?: React.ReactNode;
   customTitleBar?: boolean;
+  minWidth?: number;
+  minHeight?: number;
 };
 
 export type App = {

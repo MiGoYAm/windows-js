@@ -19,6 +19,7 @@ import { PrimitiveAtom } from "jotai/experimental";
 import { AppComponent, AppWindow } from "@/lib/types";
 import { openAppAtom, selectWindowAtom, windowAtomsAtom, zIndexAtom } from "@/lib/atoms";
 import Settings from "./apps/Settings";
+import Gallery from "./apps/Gallery";
 
 const toggleVisibilityAtom = atom(
   null,
@@ -39,7 +40,7 @@ const toggleVisibilityAtom = atom(
   },
 );
 
-const pinnedAppsAtom = atom<AppComponent[]>([Notepad, Camera, Krunker, Settings]);
+const pinnedAppsAtom = atom<AppComponent[]>([Notepad, Camera, Krunker, Gallery, Settings]);
 
 const groupedAppsAtom = atom((get) => {
   const windowAtoms = get(windowAtomsAtom);
@@ -56,7 +57,7 @@ export default function Dock() {
     <motion.div
       ref={dragContraints}
       layout
-      className="fixed bottom-0 left-0 right-0 mx-auto flex h-20 w-fit rounded-2xl bg-white/30 p-2 z-[2147483647] shadow-lg"
+      className="fixed bottom-0 left-0 right-0 mx-auto flex h-20 w-fit rounded-2xl bg-white/10 dark:bg-black/10 p-2 z-[2147483647] shadow-lg backdrop-blur-lg text-black"
       onMouseMove={(e) => {
         if (blockAnimation.current) return;
         mouseX.set(e.clientX);

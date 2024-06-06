@@ -28,15 +28,15 @@ export default function Notepad(props: AppProps) {
       <TitleBar title="Notepad" {...props}>
         <button
           onClick={save}
-          className="rounded-md p-1.5 hover:bg-neutral-800"
+          className="rounded-md p-1.5 hover:bg-neutral-300 dark:hover:bg-neutral-800 transition"
         >
-          <Save color="white" />
+          <Save />
         </button>
       </TitleBar>
 
       <textarea
         ref={ref}
-        className="flex-1 resize-none border-0 font-mono outline-none"
+        className="flex-1 resize-none p-2 border-0 font-mono outline-none bg-transparent"
       />
     </>
   );

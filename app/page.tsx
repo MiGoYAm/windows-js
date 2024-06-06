@@ -40,7 +40,7 @@ function Desktop() {
   const windowAtoms = useAtomValue(windowAtomsAtom);
 
   return (
-    <AnimatePresence presenceAffectsLayout={false}>
+    <AnimatePresence>
       {windowAtoms.map((windowAtom) => (
         <WindowMemo state={windowAtom} key={`${windowAtom}`} />
       ))}

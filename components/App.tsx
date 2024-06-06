@@ -13,28 +13,27 @@ import {
 import { PrimitiveAtom, atom, useAtomValue, useSetAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import React, {
-  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
 } from "react";
 import {
   browserWindowAtom,
   useNotReactiveAtom,
   useWindowListener,
 } from "../lib/hooks";
-import { AppWindow, WindowProps } from "@/lib/types";
+import { AppComponent, AppProps, AppWindow, WindowProps } from "@/lib/types";
 import {
   appAtomFamily,
   closeWindowAtom,
   maximizeWindowAtom,
   selectWindowAtom,
-  windowsAtom,
+  windowAtomsAtom,
   zIndexAtom,
 } from "@/lib/atoms";
+import { once } from "@/lib/once";
 
 type VariantProps = {
   width: number;
@@ -81,8 +80,8 @@ const variants = {
   }),
 };
 
-const minHeight = 128;
-const minWidth = 196;
+const minHeight = 256;
+const minWidth = 256;
 
 export default function Window({ state }: WindowProps) {
   const window = useAtomValue(state);
@@ -92,7 +91,9 @@ export default function Window({ state }: WindowProps) {
 
   const appState = useNotReactiveAtom((get) => {
     const offset =
-      (get(windowsAtom).filter((w) => w.app === window.app).length - 1) * 20;
+      (get(windowAtomsAtom).filter((a) => get(a).app === window.app).length -
+        1) *
+      20;
     const app = get(appAtom);
 
     return {
@@ -136,10 +137,8 @@ export default function Window({ state }: WindowProps) {
     y: y.get(),
   });
 
-  const [prevWindow] = useState(state);
   useEffect(() => {
-    console.log("app rerender", state.toString(), prevWindow.toString());
-    console.log(prevState.current);
+    console.log("app rerender", state.toString());
   });
 
   const animationControls = useAnimationControls();
@@ -212,7 +211,7 @@ export default function Window({ state }: WindowProps) {
       onTapStart={setOnTop}
       _dragX={x}
       _dragY={y}
-      className="absolute flex select-none flex-col overflow-clip rounded-xl border border-zinc-600 bg-neutral-800 shadow-2xl"
+      className="absolute flex select-none flex-col overflow-clip rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white shadow-2xl dark:bg-neutral-800"
     >
       {!window.app.customTitleBar && (
         <TitleBar
@@ -221,7 +220,7 @@ export default function Window({ state }: WindowProps) {
           state={state}
         />
       )}
-      {React.createElement(memo(window.app), { state, dragControls })}
+      <WindowBody body={window.app} state={state} dragControls={dragControls} />
       {!window.maximized && (
         <ResizeBorder width={width} height={height} x={x} y={y} save={save} />
       )}
@@ -229,7 +228,14 @@ export default function Window({ state }: WindowProps) {
   );
 }
 
-export const TitleBar = memo(function TitleBar(props: {
+const WindowBody = once(function WindowBody(
+  props: AppProps & { body: AppComponent },
+) {
+  const { body, state, dragControls } = props;
+  return React.createElement(body, { state, dragControls });
+});
+
+export const TitleBar = once(function TitleBar(props: {
   title: string;
   dragControls: DragControls;
   children?: React.ReactNode;
@@ -253,7 +259,7 @@ export const TitleBar = memo(function TitleBar(props: {
     <div
       onPointerDown={(event) => props.dragControls.start(event)}
       onDoubleClick={maximize}
-      className="flex select-none items-center border-b border-zinc-600 bg-neutral-900"
+      className="flex select-none items-center border-b border-zinc-300 dark:border-zinc-600 bg-neutral-100 dark:bg-neutral-900"
     >
       <div className="flex-1">
         <div className="group flex gap-2 p-4" data-active={isSelected}>
@@ -271,9 +277,7 @@ export const TitleBar = memo(function TitleBar(props: {
           />
         </div>
       </div>
-      <h3 className="text font-medium text-white">
-        {props.title} {props.state.toString()}
-      </h3>
+      <h1 className="font-medium">{props.title}</h1>
       <div className="flex-1">
         <div className="m-1 flex items-center justify-end">
           {props.children}
@@ -283,7 +287,7 @@ export const TitleBar = memo(function TitleBar(props: {
   );
 });
 
-const ResizeBorder = memo(function ResizeBorder(props: {
+const ResizeBorder = once(function ResizeBorder(props: {
   width: MotionValue<number>;
   height: MotionValue<number>;
   x: MotionValue<number>;

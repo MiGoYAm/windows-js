@@ -1,23 +1,24 @@
 import { PrimitiveAtom, atom } from "jotai";
 import { type App, AppWindow, AppComponent } from "@/lib/types";
 import { browserWindowAtom } from "./hooks";
-import { atomFamily, atomWithDefault, splitAtom } from "jotai/utils";
+import { atomFamily, atomWithDefault } from "jotai/utils";
 import Settings from "@/components/apps/Settings";
 
 export const appAtomFamily = atomFamily((name: string) => {
   return atomWithDefault<App>((get) => {
-    const size = 512;
+    const w = 630;
+    const h = 512;
     const browserWindow = get(browserWindowAtom);
 
-    const width = Math.min(size, browserWindow?.width ?? size);
-    const height = Math.min(size, browserWindow?.height ?? size);
+    const width = Math.min(w, browserWindow?.width ?? w);
+    const height = Math.min(h, browserWindow?.height ?? h);
 
     let lastPosition;
 
     if (browserWindow) {
       lastPosition = {
         x: (browserWindow.width - width) / 2,
-        y: (browserWindow.height - height) / 2,
+        y: (browserWindow.height - h) / 2,
       };
     } else {
       lastPosition = {
@@ -34,42 +35,43 @@ export const appAtomFamily = atomFamily((name: string) => {
   });
 });
 
-export const windowsAtom = atom<AppWindow[]>([
-  {
+export const windowAtomsAtom = atom<PrimitiveAtom<AppWindow>[]>([
+  atom<AppWindow>({
     app: Settings,
     maximized: false,
     minimized: false,
     zIndex: 10,
-  },
+  }),
 ]);
-
-export const windowAtomsAtom = splitAtom(windowsAtom);
 
 export const openAppAtom = atom(null, (get, set, app: AppComponent) => {
   const appState = get(appAtomFamily(app.appName));
   const zIndex = get(zIndexAtom) + 1;
   set(zIndexAtom, zIndex);
 
-  set(windowsAtom, (prev) => [
+  set(windowAtomsAtom, (prev) => [
     ...prev,
-    {
+    atom<AppWindow>({
       app,
       maximized: appState.maximized,
       zIndex,
       minimized: false,
-    },
+    }),
   ]);
 });
 
 export const closeWindowAtom = atom(
   null,
   (get, set, atom: PrimitiveAtom<AppWindow>) => {
-    set(windowAtomsAtom, { type: "remove", atom });
-    console.log(
-      "close",
-      atom.toString(),
-      get(windowAtomsAtom).map((a) => a.toString()),
-    );
+    const windowAtoms = get(windowAtomsAtom);
+    const index = windowAtoms.indexOf(atom);
+
+    if (index >= 0) {
+      set(windowAtomsAtom, [
+        ...windowAtoms.slice(0, index),
+        ...windowAtoms.slice(index + 1),
+      ]);
+    }
   },
 );
 
