@@ -8,7 +8,6 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
-  useRef,
 } from "react";
 
 export function useNotReactiveAtom<Result>(
