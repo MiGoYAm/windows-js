@@ -1,6 +1,6 @@
 "use client";
 
-import Image, { StaticImageData } from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { Cog, ImagePlus, Wallpaper } from "lucide-react";
 import AdwaitaDark from "@/public/wallpapers/adwaita-d.webp";
 import Adwaita from "@/public/wallpapers/adwaita-l.webp";
@@ -36,7 +36,7 @@ import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import { useTheme } from "next-themes";
 
-export const wallpapers = [
+export const wallpapers: StaticImageData[] = [
   AdwaitaDark,
   Adwaita,
   AmberDark,
@@ -68,10 +68,7 @@ export const wallpapers = [
   Vnc,
 ];
 
-export const wallpaperAtom = atomWithStorage<StaticImageData>(
-  "wallpaper",
-  wallpapers[0],
-);
+export const wallpaperAtom = atomWithStorage("wallpaper", wallpapers[0]);
 
 const tabsArray = [
   {

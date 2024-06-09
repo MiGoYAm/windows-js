@@ -141,7 +141,7 @@ export default function Window({ state }: WindowProps) {
   const dragControls = useDragControls();
   const isFirstRender = useRef(true);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (window.maximized) {
       animationControls.start("maximized");
     } else if (!isFirstRender.current) {
@@ -151,7 +151,7 @@ export default function Window({ state }: WindowProps) {
     return () => animationControls.stop();
   }, [window.maximized]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     animationControls.start(window.minimized ? "minimized" : "notMinimized");
 
     return () => animationControls.stop();
@@ -207,7 +207,7 @@ export default function Window({ state }: WindowProps) {
       onTapStart={setOnTop}
       _dragX={x}
       _dragY={y}
-      className="absolute flex select-none flex-col overflow-clip rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white shadow-2xl dark:bg-neutral-800"
+      className="absolute flex select-none flex-col overflow-clip rounded-xl border border-zinc-300 bg-white shadow-2xl dark:border-zinc-600 dark:bg-neutral-800"
     >
       {!window.app.customTitleBar && (
         <TitleBar
@@ -255,7 +255,7 @@ export const TitleBar = once(function TitleBar(props: {
     <div
       onPointerDown={(event) => props.dragControls.start(event)}
       onDoubleClick={maximize}
-      className="flex select-none items-center border-b border-zinc-300 dark:border-zinc-600 bg-neutral-100 dark:bg-neutral-900"
+      className="flex select-none items-center border-b border-zinc-300 bg-neutral-100 dark:border-zinc-600 dark:bg-neutral-900"
     >
       <div className="flex-1">
         <div className="group flex gap-2 p-4" data-active={isSelected}>

@@ -4,11 +4,11 @@ import Dock from "@/components/Dock";
 import { useWindowSize } from "@/lib/hooks";
 import { AnimatePresence } from "framer-motion";
 import { useAtomValue } from "jotai";
-import React from "react";
+import { memo } from "react";
 import Window from "@/components/App";
 import { windowAtomsAtom } from "@/lib/atoms";
 import { wallpaperAtom } from "@/components/apps/Settings";
-import Image, { getImageProps } from "next/image";
+import Image from "next/image";
 
 export default function Home() {
   useWindowSize();
@@ -50,4 +50,4 @@ function Desktop() {
   );
 }
 
-const WindowMemo = React.memo(Window);
+const WindowMemo = memo(Window);
