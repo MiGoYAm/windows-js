@@ -1,7 +1,7 @@
 "use client";
 
 import Image, { StaticImageData } from "next/image";
-import { Cog, Dock, ImagePlus, Wallpaper } from "lucide-react";
+import { Cog, ImagePlus, Wallpaper } from "lucide-react";
 import AdwaitaDark from "@/public/wallpapers/adwaita-d.webp";
 import Adwaita from "@/public/wallpapers/adwaita-l.webp";
 import AmberDark from "@/public/wallpapers/amber-d.webp";
@@ -36,11 +36,6 @@ import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import { useTheme } from "next-themes";
 
-export const wallpaperAtom = atomWithStorage<StaticImageData | null>(
-  "wallpaper",
-  null,
-);
-
 export const wallpapers = [
   AdwaitaDark,
   Adwaita,
@@ -73,24 +68,25 @@ export const wallpapers = [
   Vnc,
 ];
 
+export const wallpaperAtom = atomWithStorage<StaticImageData>(
+  "wallpaper",
+  wallpapers[0],
+);
+
 const tabsArray = [
   {
     name: "Wygląd",
     icon: <Wallpaper size={20} className="box-content inline pr-2" />,
     component: AppereanceTab,
   },
-  // {
-  //   name: "Dock",
-  //   icon: <Dock size={20} className="box-content inline pr-2" />
-  // }
 ];
 
 export default function Settings() {
   const [selectedTab, selectTab] = useState(0);
 
   return (
-    <div className="@container flex flex-1 overflow-y-auto">
-      <ul className="@sm:block group hidden max-w-56 flex-1 border-r border-zinc-300 bg-neutral-100 p-2 text-sm font-medium dark:border-zinc-600 dark:bg-neutral-800">
+    <div className="flex flex-1 overflow-y-auto @container">
+      <ul className="group hidden max-w-56 flex-1 border-r border-zinc-300 bg-neutral-100 p-2 text-sm font-medium @sm:block dark:border-zinc-600 dark:bg-neutral-800">
         {tabsArray.map((tab, index) => (
           <li
             key={index}

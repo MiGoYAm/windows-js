@@ -8,6 +8,7 @@ import React from "react";
 import Window from "@/components/App";
 import { windowAtomsAtom } from "@/lib/atoms";
 import { wallpaperAtom } from "@/components/apps/Settings";
+import Image, { getImageProps } from "next/image";
 
 export default function Home() {
   useWindowSize();
@@ -25,14 +26,15 @@ function Wallpaper() {
   const wallpaper = useAtomValue(wallpaperAtom);
 
   return (
-    wallpaper && (
-      <div
-        className="absolute h-screen w-screen bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${wallpaper.src})`,
-        }}
-      />
-    )
+    <Image
+      src={wallpaper}
+      alt="Wallpaper"
+      fill
+      sizes="100vw"
+      priority
+      quality={85}
+      className="z-0 object-cover"
+    />
   );
 }
 
