@@ -1,7 +1,7 @@
 "use client";
 
-import Image, { StaticImageData } from "next/image";
-import { Cog, Dock, ImagePlus, Wallpaper } from "lucide-react";
+import Image, { type StaticImageData } from "next/image";
+import { Cog, ImagePlus, Wallpaper } from "lucide-react";
 import AdwaitaDark from "@/public/wallpapers/adwaita-d.webp";
 import Adwaita from "@/public/wallpapers/adwaita-l.webp";
 import AmberDark from "@/public/wallpapers/amber-d.webp";
@@ -36,7 +36,7 @@ import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import { useTheme } from "next-themes";
 
-export const wallpapers = [
+export const wallpapers: StaticImageData[] = [
   AdwaitaDark,
   Adwaita,
   AmberDark,
@@ -68,10 +68,7 @@ export const wallpapers = [
   Vnc,
 ];
 
-export const wallpaperAtom = atomWithStorage<StaticImageData | null>(
-  "wallpaper",
-  wallpapers[0],
-);
+export const wallpaperAtom = atomWithStorage("wallpaper", wallpapers[0]);
 
 const tabsArray = [
   {
@@ -79,10 +76,6 @@ const tabsArray = [
     icon: <Wallpaper size={20} className="box-content inline pr-2" />,
     component: AppereanceTab,
   },
-  // {
-  //   name: "Dock",
-  //   icon: <Dock size={20} className="box-content inline pr-2" />
-  // }
 ];
 
 export default function Settings() {

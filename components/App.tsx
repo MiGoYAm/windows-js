@@ -137,15 +137,11 @@ export default function Window({ state }: WindowProps) {
     y: y.get(),
   });
 
-  useEffect(() => {
-    console.log("app rerender", state.toString());
-  });
-
   const animationControls = useAnimationControls();
   const dragControls = useDragControls();
   const isFirstRender = useRef(true);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (window.maximized) {
       animationControls.start("maximized");
     } else if (!isFirstRender.current) {
@@ -155,7 +151,7 @@ export default function Window({ state }: WindowProps) {
     return () => animationControls.stop();
   }, [window.maximized]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     animationControls.start(window.minimized ? "minimized" : "notMinimized");
 
     return () => animationControls.stop();
