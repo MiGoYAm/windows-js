@@ -1,4 +1,4 @@
-import { DragControls } from "framer-motion";
+import { DragControls } from "motion/react";
 import { PrimitiveAtom } from "jotai";
 
 export type WindowProps = { state: PrimitiveAtom<AppWindow> };

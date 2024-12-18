@@ -9,7 +9,7 @@ import {
   useAnimationControls,
   useDragControls,
   useMotionValue,
-} from "framer-motion";
+} from "motion/react";
 import { PrimitiveAtom, atom, useAtomValue, useSetAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import React, {
@@ -207,11 +207,14 @@ export default function Window({ state }: WindowProps) {
       dragListener={false}
       dragMomentum={false}
       dragElastic={0}
-      onDragEnd={save}
-      onTapStart={setOnTop}
+      onDragEnd={() => {
+        if (window.maximized) return;
+        save();
+      }}
+      onPointerDown={setOnTop}
       _dragX={x}
       _dragY={y}
-      className="absolute flex select-none flex-col overflow-clip rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white shadow-2xl dark:bg-neutral-800"
+      className="absolute flex select-none flex-col overflow-clip rounded-xl border border-zinc-300 bg-white shadow-2xl dark:border-zinc-600 dark:bg-neutral-800"
     >
       {!window.app.customTitleBar && (
         <TitleBar
@@ -259,7 +262,7 @@ export const TitleBar = once(function TitleBar(props: {
     <div
       onPointerDown={(event) => props.dragControls.start(event)}
       onDoubleClick={maximize}
-      className="flex select-none items-center border-b border-zinc-300 dark:border-zinc-600 bg-neutral-100 dark:bg-neutral-900"
+      className="flex select-none items-center border-b border-zinc-300 bg-neutral-100 dark:border-zinc-600 dark:bg-neutral-900"
     >
       <div className="flex-1">
         <div className="group flex gap-2 p-4" data-active={isSelected}>
@@ -273,7 +276,7 @@ export const TitleBar = once(function TitleBar(props: {
           />
           <span
             onClick={maximize}
-            className="size-3 rounded-full border border-black/[0.06] bg-green-500 transition duration-100 active:bg-green-700 group-data-[active=false]:bg-[#ddd] "
+            className="size-3 rounded-full border border-black/[0.06] bg-green-500 transition duration-100 active:bg-green-700 group-data-[active=false]:bg-[#ddd]"
           />
         </div>
       </div>
@@ -313,22 +316,22 @@ const ResizeBorder = once(function ResizeBorder(props: {
       <motion.div
         onPan={(event, info) => resizeLeft(info)}
         onPanEnd={props.save}
-        className="absolute left-0 top-0 h-full w-px cursor-w-resize"
+        className="absolute left-0 top-0 z-10 h-full w-px cursor-w-resize"
       />
       <motion.div
         onPan={(event, info) => resizeRight(info)}
         onPanEnd={props.save}
-        className="absolute right-0 top-0 h-full w-px cursor-e-resize"
+        className="absolute right-0 top-0 z-10 h-full w-px cursor-e-resize"
       />
       <motion.div
         onPan={(event, info) => resizeTop(info)}
         onPanEnd={props.save}
-        className="absolute top-0 h-px w-full cursor-n-resize"
+        className="absolute top-0 z-10 h-px w-full cursor-n-resize"
       />
       <motion.div
         onPan={(event, info) => resizeBottom(info)}
         onPanEnd={props.save}
-        className="absolute bottom-0 h-px w-full cursor-s-resize"
+        className="absolute bottom-0 z-10 h-px w-full cursor-s-resize"
       />
       <motion.div
         onPan={(event, info) => {
@@ -336,7 +339,7 @@ const ResizeBorder = once(function ResizeBorder(props: {
           resizeLeft(info);
         }}
         onPanEnd={props.save}
-        className="absolute left-0 top-0 size-2 cursor-nw-resize"
+        className="absolute left-0 top-0 z-10 size-2 cursor-nw-resize"
       />
       <motion.div
         onPan={(event, info) => {
@@ -344,7 +347,7 @@ const ResizeBorder = once(function ResizeBorder(props: {
           resizeRight(info);
         }}
         onPanEnd={props.save}
-        className="absolute right-0 top-0 size-2 cursor-ne-resize"
+        className="absolute right-0 top-0 z-10 size-2 cursor-ne-resize"
       />
       <motion.div
         onPan={(event, info) => {
@@ -352,7 +355,7 @@ const ResizeBorder = once(function ResizeBorder(props: {
           resizeRight(info);
         }}
         onPanEnd={props.save}
-        className="absolute bottom-0 right-0 size-2 cursor-se-resize"
+        className="absolute bottom-0 right-0 z-10 size-2 cursor-se-resize"
       />
       <motion.div
         onPan={(event, info) => {
@@ -360,7 +363,7 @@ const ResizeBorder = once(function ResizeBorder(props: {
           resizeLeft(info);
         }}
         onPanEnd={props.save}
-        className="absolute bottom-0 left-0 size-2 cursor-sw-resize"
+        className="absolute bottom-0 left-0 z-10 size-2 cursor-sw-resize"
       />
     </>
   );

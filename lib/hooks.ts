@@ -8,7 +8,6 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
-  useRef,
 } from "react";
 
 export function useNotReactiveAtom<Result>(
@@ -82,4 +81,3 @@ export function atomWithListeners<Value>(initialValue: Value) {
   };
   return [anAtom, useListener] as const;
 }
-

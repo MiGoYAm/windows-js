@@ -1,6 +1,6 @@
 "use client";
 
-import { atom, useAtom, useSetAtom } from "jotai";
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   AnimatePresence,
   MotionValue,
@@ -9,15 +9,20 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-} from "framer-motion";
-import React, { MutableRefObject, RefObject, useCallback, useRef } from "react";
+} from "motion/react";
+import React, { RefObject, useCallback, useRef } from "react";
 import Notepad from "./apps/Notepad";
 import Camera from "./apps/Camera";
 import Krunker from "./apps/Krunker";
 import { useSelectAtom } from "../lib/hooks";
-import { PrimitiveAtom } from "jotai/experimental";
+import { PrimitiveAtom } from "jotai/vanilla";
 import { AppComponent, AppWindow } from "@/lib/types";
-import { openAppAtom, selectWindowAtom, windowAtomsAtom, zIndexAtom } from "@/lib/atoms";
+import {
+  openAppAtom,
+  selectWindowAtom,
+  windowAtomsAtom,
+  zIndexAtom,
+} from "@/lib/atoms";
 import Settings from "./apps/Settings";
 import Gallery from "./apps/Gallery";
 
@@ -40,16 +45,22 @@ const toggleVisibilityAtom = atom(
   },
 );
 
-const pinnedAppsAtom = atom<AppComponent[]>([Notepad, Camera, Krunker, Gallery, Settings]);
+const pinnedAppsAtom = atom<AppComponent[]>([
+  Notepad,
+  Camera,
+  Krunker,
+  Gallery,
+  Settings,
+]);
 
 const groupedAppsAtom = atom((get) => {
   const windowAtoms = get(windowAtomsAtom);
-  return {} as Partial<Record<string, PrimitiveAtom<AppWindow>[]>>
-  //return Object.groupBy(windowAtoms, (w) => get(w).app.appName);
+  //return {} as Partial<Record<string, PrimitiveAtom<AppWindow>[]>>;
+  return Object.groupBy(windowAtoms, (w) => get(w).app.appName);
 });
 
 export default function Dock() {
-  const dragContraints = useRef(null);
+  const dragContraints = useRef<HTMLDivElement>(null as any);
   const blockAnimation = useRef(false);
   const mouseX = useMotionValue<number>(Infinity);
 
@@ -57,7 +68,7 @@ export default function Dock() {
     <motion.div
       ref={dragContraints}
       layout
-      className="fixed bottom-0 left-0 right-0 mx-auto flex h-20 w-fit rounded-2xl bg-white/10 dark:bg-black/10 p-2 z-[2147483647] shadow-lg backdrop-blur-lg text-black"
+      className="fixed bottom-0 left-0 right-0 z-[2147483647] mx-auto flex h-20 w-fit rounded-2xl bg-white/10 p-2 text-black shadow-lg backdrop-blur-lg dark:bg-black/10"
       onMouseMove={(e) => {
         if (blockAnimation.current) return;
         mouseX.set(e.clientX);
@@ -90,7 +101,7 @@ export default function Dock() {
 
 function AppList(props: {
   atom: PrimitiveAtom<AppComponent[]>;
-  blockAnimation: MutableRefObject<boolean>;
+  blockAnimation: RefObject<boolean>;
   mouseX: MotionValue<number>;
   dragContraints: RefObject<Element>;
 }) {
@@ -120,7 +131,7 @@ function AppList(props: {
 
 function AppIcon(props: {
   app: AppComponent;
-  blockAnimation: MutableRefObject<boolean>;
+  blockAnimation: RefObject<boolean>;
   mouseX: MotionValue<number>;
   dragContraints: RefObject<Element>;
 }) {
@@ -139,24 +150,25 @@ function AppIcon(props: {
   );
 
   const distance = useTransform(props.mouseX, (x) => {
-    const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
-
+    const bounds = ref.current?.getBoundingClientRect();
+    if (!bounds) return 0;
     return x - bounds.x - bounds.width / 2;
   });
 
-  const widthSync = useTransform(distance, [-150, 0, 150], [64, 128, 64]);
-  const width = useSpring(widthSync, {
+  const scaleSync = useTransform(distance, [-150, 0, 150], [1, 2, 1]);
+  const scale = useSpring(scaleSync, {
     mass: 0.1,
     stiffness: 150,
     damping: 12,
   });
-  const dotWidth = useTransform(width, [64, 128], [6, 48]);
+  const size = useTransform(scale, (x) => x * 64);
+  const dotWidth = useTransform(scale, (x) => x * 12);
 
   return (
     <Reorder.Item
       ref={ref}
       value={props.app}
-      style={{ originY: 1, width, height: width, borderRadius: "18.75%" }}
+      style={{ originY: 1, width: size, height: size, borderRadius: "18.75%" }}
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5 }}
@@ -167,7 +179,7 @@ function AppIcon(props: {
           toggleWindowVisibility(openedWindows[0]);
         }
       }}
-      onContextMenu={(e) => {
+      onContextMenu={(e: any) => {
         e.preventDefault();
         openApp(props.app);
         //props.blockAnimation.current = true;
@@ -175,13 +187,22 @@ function AppIcon(props: {
       dragConstraints={props.dragContraints}
       className="relative flex size-16 items-center justify-center bg-white text-sm shadow-md"
     >
-      {props.app.icon ? props.app.icon : <p>{props.app.appName}</p>}
-      {openedWindows.length > 0 && (
-        <motion.div
-          style={{ width: dotWidth }}
-          className="absolute -bottom-[7px] size-[6px] rounded-full bg-slate-300"
-        />
+      {props.app.icon ? (
+        props.app.icon
+      ) : (
+        <motion.p style={{ scale }}>{props.app.appName}</motion.p>
       )}
+      <AnimatePresence>
+        {openedWindows.length > 0 && (
+          <motion.div
+            style={{ width: dotWidth }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute -bottom-[6px] size-[4px] rounded-full bg-slate-300"
+          />
+        )}
+      </AnimatePresence>
     </Reorder.Item>
   );
 }

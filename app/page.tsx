@@ -2,12 +2,13 @@
 
 import Dock from "@/components/Dock";
 import { useWindowSize } from "@/lib/hooks";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "motion/react";
 import { useAtomValue } from "jotai";
 import React from "react";
 import Window from "@/components/App";
 import { windowAtomsAtom } from "@/lib/atoms";
 import { wallpaperAtom } from "@/components/apps/Settings";
+import { getImageProps } from "next/image";
 
 export default function Home() {
   useWindowSize();
@@ -21,6 +22,27 @@ export default function Home() {
   );
 }
 
+function getImageSet(srcSet = "") {
+  const imageSet = srcSet
+    .split(", ")
+    .map((str) => {
+      const [url, dpi] = str.split(" ");
+      return `url("${url}") ${dpi}`;
+    })
+    .join(", ");
+  return `image-set(${imageSet})`;
+}
+
+function getBackgroundImage(image: string) {
+  const { props } = getImageProps({
+    alt: "",
+    width: 4096,
+    height: 4096,
+    src: image,
+  });
+  return getImageSet(props.srcSet);
+}
+
 function Wallpaper() {
   const wallpaper = useAtomValue(wallpaperAtom);
 
@@ -28,9 +50,7 @@ function Wallpaper() {
     wallpaper && (
       <div
         className="absolute h-screen w-screen bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${wallpaper.src})`,
-        }}
+        style={{ backgroundImage: getBackgroundImage(wallpaper.src) }}
       />
     )
   );

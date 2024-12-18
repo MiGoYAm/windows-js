@@ -15,8 +15,8 @@ export default function Camera() {
 
   const openApp = useSetAtom(openAppAtom);
 
-  const mediaRecorder = useRef<MediaRecorder>();
-  const canvas = useRef<OffscreenCanvas>();
+  const mediaRecorder = useRef<MediaRecorder>(null);
+  const canvas = useRef<OffscreenCanvas>(null);
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {

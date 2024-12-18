@@ -2,7 +2,6 @@ import { PrimitiveAtom, atom } from "jotai";
 import { type App, AppWindow, AppComponent } from "@/lib/types";
 import { browserWindowAtom } from "./hooks";
 import { atomFamily, atomWithDefault } from "jotai/utils";
-import Settings from "@/components/apps/Settings";
 
 export const appAtomFamily = atomFamily((name: string) => {
   return atomWithDefault<App>((get) => {
@@ -35,14 +34,7 @@ export const appAtomFamily = atomFamily((name: string) => {
   });
 });
 
-export const windowAtomsAtom = atom<PrimitiveAtom<AppWindow>[]>([
-  atom<AppWindow>({
-    app: Settings,
-    maximized: false,
-    minimized: false,
-    zIndex: 10,
-  }),
-]);
+export const windowAtomsAtom = atom<PrimitiveAtom<AppWindow>[]>([]);
 
 export const openAppAtom = atom(null, (get, set, app: AppComponent) => {
   const appState = get(appAtomFamily(app.appName));

@@ -10,6 +10,7 @@ import { useState } from "react";
 import Image, { ImageProps } from "next/image";
 import { AppProps } from "@/lib/types";
 import React from "react";
+import { AnimatePresence, motion } from "motion/react";
 
 export const images: string[] = [
   ...wallpapers.map((wallpaper) => wallpaper.src),
@@ -27,29 +28,54 @@ export default function Gallery(props: GalleryProps) {
     }
     return 0;
   });
+  const [direction, setDirection] = useState(0);
 
   function next() {
     setIndex((index) => (index + 1) % images.length);
+    setDirection(1);
   }
   function prev() {
     setIndex((index) => (index - 1 + images.length) % images.length);
+    setDirection(-1);
   }
 
   return (
     <div className="relative flex-1">
-      <LoadingImage
-        key={index}
-        src={images[index]}
-        alt=""
-      />
+      <AnimatePresence initial={false} custom={direction}>
+        <MotionImage
+          key={index}
+          custom={direction}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{
+            x: { type: "spring", stiffness: 300, damping: 30 },
+            opacity: { duration: 0.2 },
+          }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={1}
+          onDragEnd={(e, { offset, velocity }) => {
+            const swipe = swipePower(offset.x, velocity.x);
+            if (swipe < -swipeConfidenceThreshold) {
+              next();
+            } else if (swipe > swipeConfidenceThreshold) {
+              prev();
+            }
+          }}
+          src={images[index]}
+          alt={images[index]}
+        />
+      </AnimatePresence>
       <button
-        className="absolute inset-y-0 left-2 my-auto size-9 rounded-full bg-neutral-200 p-1.5 dark:bg-neutral-700"
+        className="absolute inset-y-0 left-2 z-10 my-auto size-9 rounded-full bg-neutral-200 p-1.5 dark:bg-neutral-700"
         onClick={prev}
       >
         <ArrowLeft />
       </button>
       <button
-        className="absolute inset-y-0 right-2 my-auto size-9 rounded-full bg-neutral-200 p-1.5 dark:bg-neutral-700"
+        className="absolute inset-y-0 right-2 z-10 my-auto size-9 rounded-full bg-neutral-200 p-1.5 dark:bg-neutral-700"
         onClick={next}
       >
         <ArrowRight />
@@ -61,27 +87,46 @@ export default function Gallery(props: GalleryProps) {
 Gallery.appName = "Gallery";
 Gallery.icon = <ImageIcon className="size-3/5" />;
 
-const LoadingImage = React.forwardRef<HTMLImageElement, ImageProps>(
-  (props, ref) => {
-    const [loaded, setLoaded] = useState(false);
+function LoadingImage(props: ImageProps) {
+  const [loaded, setLoaded] = useState(false);
 
-    return (
-      <>
-        <Image
-          {...props}
-          onLoad={() => setLoaded(true)}
-          fill
-          className="object-contain"
-          ref={ref}
-        />
-        {!loaded && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <LoaderCircle className="size-8 animate-spin" strokeWidth={3} />
-          </div>
-        )}
-      </>
-    );
+  return (
+    <>
+      <Image
+        {...props}
+        onLoad={() => setLoaded(true)}
+        fill
+        className="object-contain"
+      />
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <LoaderCircle className="size-8 animate-spin" strokeWidth={3} />
+        </div>
+      )}
+    </>
+  );
+}
+
+const MotionImage = motion.create(LoadingImage);
+
+const variants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 1000 : -1000,
+    opacity: 0,
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
   },
-);
+  exit: (direction: number) => ({
+    zIndex: 0,
+    x: direction < 0 ? 1000 : -1000,
+    opacity: 0,
+  }),
+};
 
-LoadingImage.displayName = "LoadingImage";
+const swipeConfidenceThreshold = 10000;
+function swipePower(offset: number, velocity: number) {
+  return Math.abs(offset) * velocity;
+}

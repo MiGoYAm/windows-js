@@ -36,11 +36,6 @@ import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import { useTheme } from "next-themes";
 
-export const wallpaperAtom = atomWithStorage<StaticImageData | null>(
-  "wallpaper",
-  null,
-);
-
 export const wallpapers = [
   AdwaitaDark,
   Adwaita,
@@ -73,6 +68,11 @@ export const wallpapers = [
   Vnc,
 ];
 
+export const wallpaperAtom = atomWithStorage<StaticImageData | null>(
+  "wallpaper",
+  wallpapers[0],
+);
+
 const tabsArray = [
   {
     name: "Wygląd",
@@ -89,8 +89,8 @@ export default function Settings() {
   const [selectedTab, selectTab] = useState(0);
 
   return (
-    <div className="@container flex flex-1 overflow-y-auto">
-      <ul className="@sm:block group hidden max-w-56 flex-1 border-r border-zinc-300 bg-neutral-100 p-2 text-sm font-medium dark:border-zinc-600 dark:bg-neutral-800">
+    <div className="flex flex-1 overflow-y-auto @container">
+      <ul className="group hidden max-w-56 flex-1 border-r border-zinc-300 bg-neutral-100 p-2 text-sm font-medium @sm:block dark:border-zinc-600 dark:bg-neutral-800">
         {tabsArray.map((tab, index) => (
           <li
             key={index}
@@ -116,17 +116,18 @@ Settings.appName = "Ustawienia";
 Settings.icon = <Cog className="size-4/5" />;
 
 function Theme(props: {
+  title: string;
   name: string;
-  selected: boolean;
   titleBar: string;
   window: string;
-  onClick: () => void;
 }) {
+  const { theme, setTheme } = useTheme();
+
   return (
     <div className="max-w-28 flex-1">
       <div
-        onClick={props.onClick}
-        className={`flex aspect-square max-w-28 flex-1 items-center justify-center rounded-lg border border-neutral-300 bg-slate-500 ring-blue-500 dark:border-neutral-600 ${props.selected ? "ring" : ""}`}
+        onClick={() => setTheme(props.name)}
+        className={`flex aspect-square max-w-28 flex-1 items-center justify-center rounded-lg border border-neutral-300 bg-slate-500 ring-blue-500 dark:border-neutral-600 ${theme == props.name ? "ring" : ""}`}
       >
         <div
           className={`size-10/12 overflow-clip rounded-md border ${props.titleBar}`}
@@ -138,14 +139,13 @@ function Theme(props: {
           </div>
         </div>
       </div>
-      <p className="mt-3 text-center text-sm font-medium">{props.name}</p>
+      <p className="mt-3 text-center text-sm font-medium">{props.title}</p>
     </div>
   );
 }
 
 function AppereanceTab() {
   const setWallpaper = useSetAtom(wallpaperAtom);
-  const { theme, setTheme } = useTheme();
 
   return (
     <>
@@ -153,18 +153,16 @@ function AppereanceTab() {
         <h2 className="mb-2">Motyw</h2>
         <div className="section flex justify-center gap-6">
           <Theme
-            name="Jasny"
-            selected={theme === "light"}
+            title="Jasny"
+            name="light"
             titleBar="border-zinc-300 bg-white"
             window="border-zinc-300 bg-neutral-100"
-            onClick={() => setTheme("light")}
           />
           <Theme
-            name="Ciemny"
-            selected={theme === "dark"}
+            title="Ciemny"
+            name="dark"
             titleBar="border-zinc-600 bg-neutral-800"
             window="border-zinc-600 bg-neutral-900"
-            onClick={() => setTheme("dark")}
           />
         </div>
       </section>
