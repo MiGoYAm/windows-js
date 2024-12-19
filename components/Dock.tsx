@@ -1,6 +1,6 @@
 "use client";
 
-import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { atom, useAtom, useSetAtom } from "jotai";
 import {
   AnimatePresence,
   MotionValue,
@@ -55,7 +55,6 @@ const pinnedAppsAtom = atom<AppComponent[]>([
 
 const groupedAppsAtom = atom((get) => {
   const windowAtoms = get(windowAtomsAtom);
-  //return {} as Partial<Record<string, PrimitiveAtom<AppWindow>[]>>;
   return Object.groupBy(windowAtoms, (w) => get(w).app.appName);
 });
 
@@ -164,6 +163,8 @@ function AppIcon(props: {
   const size = useTransform(scale, (x) => x * 64);
   const dotWidth = useTransform(scale, (x) => x * 12);
 
+  const isDrag = useRef(false);
+
   return (
     <Reorder.Item
       ref={ref}
@@ -172,20 +173,27 @@ function AppIcon(props: {
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5 }}
-      onTap={() => {
+      onPointerUp={(e: PointerEvent) => {
+        if (e.button !== 0) return;
+        if (isDrag.current) {
+          isDrag.current = false;
+          return;
+        }
         if (openedWindows.length === 0) {
           openApp(props.app);
         } else if (openedWindows.length === 1) {
           toggleWindowVisibility(openedWindows[0]);
         }
       }}
+      onDragStart={(e) => (isDrag.current = true)}
       onContextMenu={(e: any) => {
         e.preventDefault();
         openApp(props.app);
         //props.blockAnimation.current = true;
       }}
+      dragElastic={0.1}
       dragConstraints={props.dragContraints}
-      className="relative flex size-16 items-center justify-center bg-white text-sm shadow-md"
+      className="relative flex size-16 cursor-pointer items-center justify-center overflow-clip rounded-[18.75%] bg-white text-sm shadow-md dark:bg-neutral-800 dark:text-white"
     >
       {props.app.icon ? (
         props.app.icon

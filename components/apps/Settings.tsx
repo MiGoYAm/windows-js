@@ -106,7 +106,11 @@ export default function Settings() {
 }
 
 Settings.appName = "Ustawienia";
-Settings.icon = <Cog className="size-4/5" />;
+Settings.icon = (
+  <div className="flex size-full items-center justify-center bg-neutral-300 dark:bg-neutral-800">
+    <Cog className="size-4/5 text-neutral-800 dark:text-neutral-400" />
+  </div>
+);
 
 function Theme(props: {
   title: string;
